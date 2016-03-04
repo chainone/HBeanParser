@@ -34,16 +34,10 @@ getKeyPathStrings a kvp (x:xs) = do
 getKeyPathsStrings :: IOSArrow XmlTree XmlTree -> [(String, String)] -> [[String]] -> IO [String]
 getKeyPathsStrings a kvp kps = foldl1 (liftA2 (++)) $ getKeyPathStrings a kvp <$> kps
 
-getXMLContent :: String -> IO String
-getXMLContent path = do
-   handle <- openFile path ReadMode
-   c <- mkTextEncoding "GBK"
-   hSetEncoding handle c
-   hGetContents handle
 
 startParse :: String -> [(String, String)] -> [[String]] -> IO ()
 startParse path kv kpl = do
-   content <- getXMLContent path
+   content <- readFile path
    let xml = readString [withWarnings no] content
    ret <- getKeyPathsStrings (xml >>> css "bean") kv kpl
-   print ret
+   mapM_ putStrLn ret
