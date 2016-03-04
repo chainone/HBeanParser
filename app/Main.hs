@@ -4,7 +4,6 @@ import BeanParser
 import System.Environment
 import Data.List.Split
 import Data.Maybe
-import System.IO
 
 
 -- id=someidentifier;class=somdidentifier

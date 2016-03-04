@@ -8,7 +8,7 @@ module BeanParser
 
 import Text.XML.HXT.Core
 import Text.HandsomeSoup
-import System.IO
+import qualified System.IO.Strict as IS
 import Control.Applicative
 
 
@@ -37,7 +37,7 @@ getKeyPathsStrings a kvp kps = foldl1 (liftA2 (++)) $ getKeyPathStrings a kvp <$
 
 startParse :: String -> [(String, String)] -> [[String]] -> IO ()
 startParse path kv kpl = do
-   content <- readFile path
+   content <- IS.readFile path
    let xml = readString [withWarnings no] content
    ret <- getKeyPathsStrings (xml >>> css "bean") kv kpl
    mapM_ putStrLn ret
