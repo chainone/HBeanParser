@@ -2,12 +2,14 @@
 
 module BeanParser
     ( getKeyPathStrings
+    , getKeyPathsStrings
+    , startParse
     ) where
 
 import Text.XML.HXT.Core
 import Text.HandsomeSoup
 import System.IO
-import Data.List.Split
+import Control.Applicative
 
 
 hasAttibuteKeyValuePair :: ArrowXml a => [(String, String)] -> [a XmlTree XmlTree]
@@ -28,3 +30,20 @@ getKeyPathStrings a kvp [x] =  runX $ a >>> hasORAttributeKeyValuePairs kvp /> h
 getKeyPathStrings a kvp (x:xs) = do
       refValues <- runX $ a >>> hasORAttributeKeyValuePairs kvp /> hasName "property" >>> hasAttrValue "name" (== x) >>> getBeanRefValue
       getKeyPathStrings a ( (\r -> ("id", r)) <$> refValues) xs
+
+getKeyPathsStrings :: IOSArrow XmlTree XmlTree -> [(String, String)] -> [[String]] -> IO [String]
+getKeyPathsStrings a kvp kps = foldl1 (liftA2 (++)) $ getKeyPathStrings a kvp <$> kps
+
+getXMLContent :: String -> IO String
+getXMLContent path = do
+   handle <- openFile path ReadMode
+   c <- mkTextEncoding "GBK"
+   hSetEncoding handle c
+   hGetContents handle
+
+startParse :: String -> [(String, String)] -> [[String]] -> IO ()
+startParse path kv kpl = do
+   content <- getXMLContent path
+   let xml = readString [withWarnings no] content
+   ret <- getKeyPathsStrings (xml >>> css "bean") kv kpl
+   print ret
